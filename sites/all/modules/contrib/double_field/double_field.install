@@ -10,16 +10,15 @@
  * Implements hook_field_schema().
  */
 function double_field_field_schema($field) {
-
   $columns = array(
     'first' => array(
       'type' => 'varchar',
-      'length' => $field['settings']['first_maxlength'],
+      'length' => $field['settings']['first']['maxlength'],
       'not null' => FALSE,
     ),
     'second' => array(
       'type' => 'varchar',
-      'length' => $field['settings']['second_maxlength'],
+      'length' => $field['settings']['second']['maxlength'],
       'not null' => FALSE,
     ),
   );
