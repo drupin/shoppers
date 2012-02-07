@@ -340,26 +340,31 @@ a, a:link, a:visited, a:hover{
         .block-commerce-cart{
           padding-left:35px;
           float: right;
-            &:before{
-              content: "\002C";
-              .websymbols;
-              font-size: 34px;
-              position: absolute;
-              left: -5px;
-              top: -5px;
-              color: @blue;
-              text-shadow: 0px 0px 0px @green;
-              .transitioning (0.5s);
-            }
-              &:hover{
-                  &:before{
-                    // text-shadow: 0px 0px 10px @dark;
-                  }
-              }
             h2.block-title{
               display: none;
             }
             .cart-contents{
+                &:before{
+                  content: "\002C";
+                  .websymbols;
+                  font-size: 34px;
+                  // position: absolute;
+                  position: relative;
+                  left: -50px;
+                  height: 0;
+                  margin-top: -18px;
+                  float: left;
+                  // left: -5px;
+                  // top: -5px;
+                  color: @blue;
+                  text-shadow: 0px 0px 0px @green;
+                  .transitioning (0.5s);
+                }
+                  // &:hover{
+                      // &:before{
+                        // text-shadow: 0px 0px 10px @dark;
+                      // }
+                  // }
                 .view-commerce-cart-block{
                     .view-content{
                       display: none;
