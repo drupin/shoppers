@@ -1,0 +1,51 @@
+<?php
+/**
+ * @file
+ * Color customizations for the Shoppers distribution
+ */
+/**
+* Implements hook_help().
+*/
+
+function personalize_help($path = '', $arg = NULL) {
+  $output = '';
+  switch ($path) {
+    case 'admin/help#personalize':
+    case 'admin/config/personalize':
+      $output = '<p>'.  t("Theme personalization settings for the shoppers.gr distribution."). '</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function personalize_menu() {
+  $items = array();
+  $items['admin/config/personalize'] = array(
+    'title' => 'Theme personalization',
+    'description' => 'Change the theme settings for your e-shop.',
+    'access arguments' => array('personalize permission'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('personalize_admin'),
+    'file' => 'personalize.admin.inc',
+  );
+  return $items;
+}
+
+function personalize_permission() {
+  return array(
+    'personalize permission' => array(
+      'title' => t('Administer shoppers.gr personalization settings'),
+      'description' => t('Theme personalization settings for the shoppers.gr distribution.'),
+    ),
+  );
+}
+ 
+function personalize_init() {
+    drupal_add_css(drupal_get_path('module', 'personalize') . '/css/' . variable_get('personalize_theme', 'classic') .'.css', array(
+  	'group' => CSS_THEME, 
+  	'every_page' => TRUE)
+	);
+}

@@ -1,0 +1,4 @@
+name = D7X Auto taxonomy 
+description = Automatically update taxonomy fields to match parent-child relationships when saving a content page 
+core = 7.x
+version = "7.x-0.1"

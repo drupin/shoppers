@@ -1,0 +1,19 @@
+name = Drupal Commerce Extra Panes
+description = Allows to add extra panes to Drupal Commerce checkout phase using existing entities
+package = Drupal Commerce - Other
+core = 7.x
+dependencies[] = commerce_checkout
+dependencies[] = ctools
+;Base module files
+files[] = commerce_extra_panes.install
+files[] = commerce_extra_panes.module
+;Include files
+files[] = includes/commerce_extra_panes.admin.inc
+files[] = includes/commerce_extra_panes.checkout_pane.inc
+
+; Information added by drupal.org packaging script on 2011-10-09
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "commerce_extra_panes"
+datestamp = "1318161948"
+

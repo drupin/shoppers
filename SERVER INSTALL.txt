@@ -1,0 +1,43 @@
+//  1. Install Ubuntu 10.10
+//  perform a minimal installation. No servers installed, no configuration or anything else.
+
+//  2. After installing Ubuntu 10.10, upgrade to 11.10
+
+sudo do-release-upgrade -d
+		DO NOT REBOOT AT THE END OF THIS PROCESS!!!!
+sudo update-grub
+sudo reboot
+
+
+//  3. After Upgrade, download and configure the BARRACUDA.sh.txt script
+
+sudo -i
+wget -q -U iCab http://files.aegir.cc/versions/BARRACUDA.sh.txt
+nano BARRACUDA.sh.txt
+		fields to edit:
+		_MY_EMAIL="info@drupin.com"
+		_XTRAS_LIST="PDS SLR CHV CSF"
+		_HTTP_WILDCARD=YES
+		_MY_OWNIP="88.198.211.208"
+		_MY_HOSTN="shoppers.gr"
+		_MY_FRONT="setup.shoppers.gr"
+		_DNS_SETUP_TEST=NO 
+
+bash BARRACUDA.sh.txt
+
+  * Your Aegir Master Instance control panel will be available at https://setup.shoppers.gr.
+  * Your (optional) fast DNS cache server (pdnsd) will listen on 127.0.0.1:53.
+  * Your (optional) Bind9 DNS Server will listen on 88.198.211.208:53.
+  * Your (optional) MultiCore Apache Solr Tomcat will listen on 127.0.0.1:8080.
+  * Your (optional) Chive MariaDB Manager will be available at https://chive.setup.shoppers.gr.
+  * Your (optional) SQL Buddy MariaDB Manager will be available at https://sqlbuddy.setup.shoppers.gr.
+  * Your (optional) Collectd Graph Panel will be available at https://cgp.setup.shoppers.gr.
+  * Your (optional) Webmin Control Panel will be available at https://shoppers.gr:10000.
+  * Your (optional) csf/lfd Firewall will support integrated Nginx abuse guard.
+
+  NOTE: Chive, SQL Buddy and Collectd will work only if chive. sqlbuddy. and cgp.
+        subdomains point to your IP (we recommend using wildcard DNS to simplify it).
+        But don't worry, you can add proper DNS entries for those subdomains later,
+        if you didn't enable wildcard DNS yet. Barracuda can install it all now, anyway.
+
+ 

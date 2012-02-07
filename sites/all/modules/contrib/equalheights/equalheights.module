@@ -1,0 +1,75 @@
+<?php
+/**
+ * @file
+ * Adds a jQuery plugin that sets the elements you specify to the same height.
+ *
+ * This module implements a jQuery plugin that can equalize the height of the
+ * user specified elements with the same class.
+ * By default, the height of the tallest element is used, but minimum and
+ * maximum height can also be set.
+ * The format for the admin settings should be 'classname:minheight,maxheight'.
+ * To find out more about the plugin, go to
+ * http://www.cssnewbie.com/equalheights-jquery-plugin/
+ */
+/**
+* Implements hook_help().
+*/
+function equalheights_help($path = '', $arg = NULL) {
+  $output = '';
+  switch ($path) {
+    case 'admin/help#equalheights':
+    case 'admin/config/equalheights':
+      $output = '<p>'.  t("Implements a jQuery plugin that makes the height of the elements equal."). '</p>';
+      break;
+  }
+  return $output;
+} // function equalheights_help
+
+/**
+ * Implements hook_init().
+ */
+function equalheights_init() {
+  $equalheightsclasses = variable_get('equalheights_css_classes', '');
+  if (!empty($equalheightsclasses)) {
+    // We use preg_split in case there're more spaces than one between classes
+    $classes = preg_split("/\n\s+/", $equalheightsclasses);
+    // Add the plugin file
+    $jqueryequalheightsjs = drupal_get_path('module', 'equalheights') .'/jquery.equalheights.js';
+    drupal_add_js($jqueryequalheightsjs);
+    $js = '(function($){';
+    $js .= '$(document).ready(function() {';
+    foreach ($classes as $class) {
+      if (!empty($class)) {
+        // Check if there's a ":" inside the setting string to avoid notices
+        if (strpos($class, ':') !== false ) {
+          list($class, $height) = explode(":", $class);
+        }
+        $js .= "\$('$class').equalHeights(";
+        if (!empty($height)) {
+          $js .= "$height";
+        }
+        // Set the overflow value
+        $overflow_value = variable_get('equalheights_overflow', 'visible');
+        $js .= ").css('overflow', '$overflow_value');";
+      }
+    }
+    $js .= '});})(jQuery);';
+    drupal_add_js($js, 'inline');
+  }
+} // function equalheights_init
+
+/**
+ * Implements hook_menu().
+ */
+function equalheights_menu() {
+  $items = array();
+  $items['admin/config/content/equalheights'] = array(
+    'title' => 'Equal Heights',
+    'description' => 'Configure elements with equal heights.',
+    'access arguments' => array('administer site configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('equalheights_admin'),
+    'file' => 'equalheights.admin.inc',
+  );
+  return $items;
+} // function equalheights_menu

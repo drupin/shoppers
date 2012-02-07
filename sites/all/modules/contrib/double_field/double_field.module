@@ -1,0 +1,350 @@
+<?php
+
+/**
+ * @file
+ * Defines double text field type.
+ */
+
+
+/**
+ * Implements hook_field_info().
+ */
+function double_field_field_info() {
+  return array(
+    'double_field' => array(
+      'label' => t('Double field'),
+      'description' => t('Double text field'),
+      'default_widget' => 'double_field',
+      'default_formatter' => 'double_field_inline',
+      'settings' => array('first_maxlength' => 255, 'second_maxlength' => 255),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_field_settings_form().
+ */
+function double_field_field_settings_form($field, $instance, $has_data) {
+  $settings = $field['settings'];
+  $form['first_maxlength'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum length of the first textfield'),
+    '#default_value' => $settings['first_maxlength'],
+    '#required' => TRUE,
+    '#description' => t('The maximum length of the second textfield in characters.'),
+    '#element_validate' => array('_element_validate_integer_positive'),
+    '#disabled' => $has_data,
+  );
+  $form['second_maxlength'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum length of the second textfield'),
+    '#default_value' => $settings['second_maxlength'],
+    '#required' => TRUE,
+    '#description' => t('The maximum length of the second field in characters.'),
+    '#element_validate' => array('_element_validate_integer_positive'),
+    '#disabled' => $has_data,
+  );
+  return $form;
+}
+
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function double_field_field_is_empty($item, $field) {
+  return $item['first'] === '' && $item['second'] === '';
+}
+
+
+/**
+ * Implements hook_field_validate().
+ */
+function double_field_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  foreach ($items as $delta => $item) {
+    if ($entity_type && $instance['required'] && ($item['first'] === '' && $item['second'] === '')) {
+      $errors[$field['field_name']][$langcode][$delta][] = array(
+        'error' => 'double_field_required', 
+        'error_element' => array (
+          'first' => $item['first'] === '',
+          'second' => $item['second'] === '',
+        ), 
+        'message' => t('%name field is required.', array('%name' => $instance['label'])),
+      );
+    }
+  }
+}
+
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function double_field_field_widget_info() {
+  $settings = array (
+    'size' => 10,
+    'prefix' => '',
+    'suffix' => '',
+  );
+  return array(
+    'double_textfield' => array(
+      'label' => t('Double textfield'),
+      'field types' => array('double_field'),
+      'settings' => array(
+        'inline' => TRUE,
+        'first' => $settings,
+        'second' => $settings
+      ),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_field_widget_settings_form().
+ */
+function double_field_field_widget_settings_form($field, $instance) {
+  $settings = $instance['widget']['settings'];
+  $form['inline'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display as inline element'),
+    '#default_value' => $settings['inline'],
+  );
+  foreach (array('first', 'second') as $subfield) {
+    $form[$subfield] = array(
+      '#title' => t('!subfield subfield', array('!subfield' => $subfield)),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form[$subfield]['size'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Size'),
+      '#default_value' => $settings[$subfield]['size'],
+      '#element_validate' => array('_element_validate_integer_positive'),
+      '#size' => 3,
+    );
+    $form[$subfield]['prefix'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Prefix'),
+      '#maxlength' => 50,
+      '#default_value' => $settings[$subfield]['prefix'],
+    );
+    $form[$subfield]['suffix'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Suffix'),
+      '#maxlength' => 50,
+      '#default_value' => $settings[$subfield]['suffix'],
+    );
+  }
+  return $form;
+}
+
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function double_field_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $settings = $instance['widget']['settings'];
+  $double_field = array(
+    '#theme_wrappers' => array('form_element'),
+  );
+  foreach (array('first', 'second') as $subfield) {
+    $double_field[$subfield] = array (
+      '#type' => 'textfield',
+      '#prefix' => $settings[$subfield]['prefix'],
+      '#suffix' => $settings[$subfield]['suffix'],
+      '#default_value' => isset($items[$delta][$subfield]) ? $items[$delta][$subfield] : NULL,
+      '#size' => $settings[$subfield]['size'],
+      '#maxlength' => $field['settings'][$subfield . '_maxlength'],
+    );
+  }
+  if ($settings['inline']) {
+    $double_field['first']['#prefix']  = '<div class="container-inline">' . $double_field['first']['#prefix'];
+    $double_field['second']['#suffix'] .= '</div>';
+  }
+  return $element + $double_field;
+}
+
+
+/**
+ * Implements hook_field_widget_error().
+ */
+function double_field_field_widget_error($element, $error, $form, &$form_state) {
+  foreach (array('first', 'second') AS $item) {
+    if ($error['error_element'][$item]) {
+      form_error($element[$item], $error['message']);
+    }
+  }
+}
+
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function double_field_field_formatter_info() {
+  $settings = array (
+    'first' => array(
+      'prefix' => '',
+      'suffix' => '&nbsp;',
+    ),
+    'second' => array(
+      'prefix' => '',
+      'suffix' => '',
+    ),
+  );
+  return array(
+    'double_field_inline' => array(
+      'label' => t('Inline'),
+      'field types' => array('double_field'),
+      'settings' => $settings,
+    ),
+    'double_field_block' => array(
+      'label' => t('Block'),
+      'field types' => array('double_field'),
+      'settings' => $settings,
+    ),
+    'double_field_fieldset' => array(
+      'label' => t('Fieldset'),
+      'field types' => array('double_field'),
+      'settings' => $settings + array('collapsible' => TRUE, 'collapsed' => FALSE),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function double_field_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $settings = $instance['display'][$view_mode]['settings'];
+
+  $element = array('#tree' => TRUE);
+  if ($instance['display'][$view_mode]['type'] == 'double_field_fieldset') {
+    $element['collapsible'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Collapsible'),
+      '#default_value' => $settings['collapsible'],
+    );
+    $element['collapsed'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Collapsed'),
+      '#default_value' => $settings['collapsed'],
+    );
+  }
+  foreach (array('first', 'second') as $subfield) {
+    $element[$subfield] = array(
+      '#title' => t('!subfield subfield', array('!subfield' => $subfield)),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $element[$subfield]['prefix'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Prefix'),
+      '#size' => 30,
+      '#maxlength' => 50,
+      '#default_value' => $settings[$subfield]['prefix'],
+    );
+    $element[$subfield]['suffix'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Suffix'),
+      '#size' => 30,
+      '#maxlength' => 50,
+      '#default_value' => $settings[$subfield]['suffix'],
+    );
+  }
+  return $element;
+}
+
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function double_field_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $settings = $instance['display'][$view_mode]['settings'];
+  $summary = '';
+  if ($instance['display'][$view_mode]['type'] == 'double_field_fieldset') {
+    $summary .= '<div>Collapsible: <em>' . ($settings['collapsible'] ? 'Yes' : 'No') . '</em></div>';
+    $summary .= '<div>Collapsed: <em>' . ($settings['collapsed'] ? 'Yes' : 'No') . '</em></div>';
+  }
+  if ($settings['first']['prefix']) {
+    $summary .= '<div>First prefix: <em>' . check_plain($settings['first']['prefix']) . '</em></div>';
+  }
+  if ($settings['first']['suffix']) {
+    $summary .= '<div>First suffix: <em>' . check_plain($settings['first']['suffix']) . '</em></div>';
+  }
+  if ($settings['second']['prefix']) {
+    $summary .= '<div>Second prefix: <em>' . check_plain($settings['second']['prefix']) . '</em></div>';
+  }
+  if ($settings['second']['suffix']) {
+    $summary .= '<div>Second suffix: <em>' . check_plain($settings['second']['suffix']) . '</em></div>';
+  }
+  return $summary;
+}
+
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function double_field_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $settings = $display['settings'];
+  $element = array();
+  if ($display['type'] == 'double_field_fieldset') {
+    foreach ($items as $delta => $item) {
+      $element[$delta] = array(
+        '#title' => check_plain($settings['first']['prefix'] . $item['first'] . $settings['first']['suffix']),
+        '#value' => check_plain($settings['second']['prefix'] . $item['second'] . $settings['second']['suffix']),
+        '#theme' => 'fieldset',
+        '#collapsible' => $settings['collapsible'],
+        '#collapsed' => $settings['collapsed'],
+      );
+      // theme_fieldset() doesn't handle '#collapsible', '#collapsed' arguments as claimed
+      // see http://drupal.org/node/1099132
+      if ($settings['collapsible']) {
+        $element[$delta]['#attached'] = array(
+          'js' => array(
+            'misc/form.js',
+            'misc/collapse.js',
+          ),
+        );
+        $element[$delta]['#attributes'] = array(
+          'class' => $settings['collapsed'] ? array('collapsible', 'collapsed') : array('collapsible'),
+        );
+      }
+    }
+  }
+  else {
+    foreach ($items as $delta => $item) {
+      $element[$delta] = array(
+        '#display' => $display,
+        '#item' => $item,
+        '#theme' => 'double_field',
+      );
+    }
+  }
+  return $element;
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function double_field_theme() {
+  return array('double_field' => array('render element' => 'element'));
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function theme_double_field($vars) {
+  $element = $vars['element'];
+  $attributes = drupal_attributes(
+    array('class' => array('double-field', $element['#display']['type'] == 'double_field_block' ? 'clearfix' : 'container-inline'))
+  );
+  $output = '<div' . $attributes . '>';
+  $output .= '<div class="double-field-first">' . $element['#display']['settings']['first']['prefix'] . check_plain($element['#item']['first']) . $element['#display']['settings']['first']['suffix'] . '</div>';
+  $output .= '<div class="double-field-second">' . $element['#display']['settings']['second']['prefix'] . check_plain($element['#item']['second']) . $element['#display']['settings']['second']['suffix'] . '</div>';
+  $output .= '</div>';
+  return $output;
+}

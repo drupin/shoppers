@@ -1,0 +1,52 @@
+<?php
+/**
+ * @file
+ * Color customizations for the Shoppers distribution
+ */
+/**
+* Implements hook_help().
+*/
+define('SHOPPERS_COLOR_PERMISSION', 'administer shoppers colors');
+
+function shoppers_color_help($path = '', $arg = NULL) {
+  $output = '';
+  switch ($path) {
+    case 'admin/help#shoppers_color':
+    case 'admin/config/customize/color':
+      $output = '<p>'.  t("Color customizations for the Shoppers.gr distribution."). '</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function shoppers_color_menu() {
+  $items = array();
+  $items['admin/config/customize/color'] = array(
+    'title' => 'Customize Colors',
+    'description' => 'Customize the colors for you e-shop.',
+    'access arguments' => array(SHOPPERS_COLOR_PERMISSION),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('shoppers_color_admin'),
+    'file' => 'shoppers_color.admin.inc',
+  );
+  return $items;
+}
+
+function shoppers_color_permission() {
+  return array(
+    SHOPPERS_COLOR_PERMISSION => array(
+      'title' => t('Administer shoppers.gr colors'),
+      'description' => t('Administer colors for the shoppers.gr distribution.'),
+    ),
+  );
+}
+ 
+function shoppers_color_init() {
+    drupal_add_css(drupal_get_path('module', 'shoppers_color') . '/css/' . variable_get('shoppers_color_buttons', 'red') .'-buttons.css', array(
+  	'group' => CSS_THEME, 
+  	'every_page' => TRUE)
+	);
+}

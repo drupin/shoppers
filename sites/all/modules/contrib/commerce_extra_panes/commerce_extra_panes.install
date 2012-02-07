@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * @file
+ * Install file for Commerce extra panes.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function commerce_extra_panes_schema() {
+  $schema = array();
+  $schema['commerce_extra_panes'] = array(
+    'description' => 'Extra panes configuration data.',
+    'fields' => array(
+      'extra_id' => array(
+        'description' => 'Extra pane id.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'extra_type' => array(
+        'description' => 'Entity type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'status' => array(
+        'description' => 'Boolean value indicating whether or not the pane is enabled.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+    ),
+    'primary key' => array('extra_id', 'extra_type'),
+  );
+  return $schema;
+}

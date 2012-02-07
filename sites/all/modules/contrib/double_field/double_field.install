@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the double field module.
+ */
+
+
+/**
+ * Implements hook_field_schema().
+ */
+function double_field_field_schema($field) {
+
+  $columns = array(
+    'first' => array(
+      'type' => 'varchar',
+      'length' => $field['settings']['first_maxlength'],
+      'not null' => FALSE,
+    ),
+    'second' => array(
+      'type' => 'varchar',
+      'length' => $field['settings']['second_maxlength'],
+      'not null' => FALSE,
+    ),
+  );
+  $indexes = array(
+    'first' => array('first'),
+    'second' => array('second'),
+  );
+
+  return array(
+    'columns' => $columns,
+    'indexes' => $indexes
+  );
+}

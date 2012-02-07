@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * Set taxonomy relations just before the node gets saved
+ * @param $node the node about to get saved
+ */
+function d7xtax_node_presave($node) {
+	if($node->type=='content') {
+		$tax1 = $node->field_tag_lvl_1['und'][0];
+		$tax2 = $node->field_tag_lvl_2['und'][0];
+
+		//save parent taxonomy term
+		taxonomy_term_save((object)$tax1);
+
+		//create child taxonomy's parent list
+		if( $temp_tax = taxonomy_term_load($tax2['tid'])) {
+			$parents = array();
+			$exists = false;
+			foreach(taxonomy_get_parents($tax2['tid']) as $value) {
+				if($tax1['tid'] == $value->tid) {
+					$exists = true;
+				}
+				array_push($parents, $value->tid);
+			}
+			if (!$exists) {
+				array_push($parents, $tax1['tid']);
+			}
+			$tax2['parent'] = $parents;
+			//drupal_set_message(print_r($parents,true));
+		} else {
+			$tax2['parent'] = array($tax1['tid']);
+		}
+
+		//save child taxonomy
+		taxonomy_term_save((object)$tax2);
+
+
+		//drupal_set_message(print_r($node,true));
+	}
+}

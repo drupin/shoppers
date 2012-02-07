@@ -1,0 +1,6 @@
+name = Shoppers Personalization
+description = "Theme personalization settings the shoppers.gr distribution."
+core = 7.x
+configure = admin/config/personalize
+files[] = shoppers_color.admin.inc
+files[] = shoppers_color.module

@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * Terms of service plugin for Extra panes in checkout phase.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function commerce_extra_panes_termsofservice_form_commerce_checkout_pane_settings_form_alter(&$form, &$form_state, $form_id) {
+  if ($form['checkout_pane']['#value']['base'] == 'commerce_extra_panes_contents') {
+    $pane_id = $form['checkout_pane']['#value']['pane_id'];
+    $form['termsofservice'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Extra panes Terms of Service'),
+    );
+    $form['termsofservice']['node-tos'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable this pane as Terms of Service.'),
+      '#default_value' => variable_get('cep_tos_' . $pane_id, 0),
+    );
+    $form['termsofservice']['node-tos-required'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Make the terms of service required.'),
+      '#default_value' => variable_get('cep_tos_required_' . $pane_id, 0),
+    );
+    $form['submit']['#weight'] = 1;
+    $form['reset']['#weight'] = 2;
+    $form['submit']['#submit'][] = 'commerce_extra_panes_termsofservice_form_settings_submit';
+  }
+}
+
+function commerce_extra_panes_termsofservice_form_settings_submit(&$form, &$form_state) {
+  $pane_id = $form['checkout_pane']['#value']['pane_id'];
+  variable_set('cep_tos_' . $pane_id, $form_state['values']['node-tos']);
+  variable_set('cep_tos_required_' . $pane_id, $form_state['values']['node-tos-required']);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function commerce_extra_panes_termsofservice_form_commerce_checkout_form_checkout_alter(&$form, &$form_state, $form_id) {
+  $extra_panes = commerce_extra_panes_get_panes();
+  foreach ($extra_panes as $extra_pane) {
+    if ($extra_pane->status) {
+      $pane_id = 'extra_pane__' . $extra_pane->extra_type . '__' . $extra_pane->extra_id;
+      if (variable_get('cep_tos_' . $pane_id, 0)) {
+        $form[$pane_id]['termsofservice'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('I agree with the Terms of Service'),
+          '#required' => variable_get('cep_tos_required_' . $pane_id, 0),
+        );
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+name = Shoppers Color
+description = "Color customizations for the shoppers.gr distribution."
+core = 7.x
+configure = admin/config/customize/color
+files[] = shoppers_color.admin.inc
+files[] = shoppers_color.module
