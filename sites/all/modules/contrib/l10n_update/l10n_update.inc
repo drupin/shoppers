@@ -106,7 +106,8 @@ function l10n_update_download_file($download_url, $destination = NULL) {
   if ($file) {
     $variables['%tmpfile'] = $file;
     // We download and store the file (in one if statement! Isnt't that neat ;) ).
-    if (($contents = drupal_http_request($download_url)) && $contents->code == 200 && file_put_contents($file, $contents->data)) {
+    // @todo remove the timeout once we use the batch API to download the files.
+    if (($contents = drupal_http_request($download_url, array('timeout' => 90))) && $contents->code == 200 && $file_result = file_put_contents($file, $contents->data)) {
       watchdog('l10n_update', 'Successfully downloaded %download_link to %tmpfile', $variables);
       return $file;
     }
@@ -114,7 +115,13 @@ function l10n_update_download_file($download_url, $destination = NULL) {
       if (isset($contents->error)) {
         watchdog('l10n_update', 'An error occured during the download operation: %error.', array('%error' => $contents->error), WATCHDOG_ERROR);
       }
-      watchdog('l10n_update', 'Unable to download and save %download_link file to %tmpfile.', $variables, WATCHDOG_ERROR);
+      elseif (isset($contents->code) && $contents->code != 200) {
+        watchdog('l10n_update', 'An error occured during the download operation: HTTP status code %code.', array('%code' => $contents->code), WATCHDOG_ERROR);
+      }
+      if (isset($file_result)) {
+        // file_put_contents() was called but returned FALSE.
+        watchdog('l10n_update', 'Unable to save %download_link file to %tmpfile.', $variables, WATCHDOG_ERROR);
+      }
     }
 
   }

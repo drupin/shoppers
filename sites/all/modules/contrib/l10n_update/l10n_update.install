@@ -106,7 +106,7 @@ function l10n_update_schema() {
         'default' => '',
       ),
       'timestamp' => array(
-        'description' => 'Unix timestamp of the release of this translation file. Zero if not yet downloaded',
+        'description' => 'Unix timestamp of the time the file was downloaded or saved to disk. Zero if not yet downloaded',
         'type' => 'int',
         'not null' => FALSE,
         'disp-width' => '11',
@@ -127,13 +127,6 @@ function l10n_update_schema() {
       ),
       'last_checked' => array(
         'description' => 'Unix timestamp of the last time this translation was downloaded from or checked at remote server and confirmed to be the most recent release available.',
-        'type' => 'int',
-        'not null' => FALSE,
-        'disp-width' => '11',
-        'default' => 0,
-      ),
-      'import_date' => array(
-        'description' => 'Unix timestamp of the time the file was downloaded.',
         'type' => 'int',
         'not null' => FALSE,
         'disp-width' => '11',
@@ -270,4 +263,22 @@ function l10n_update_update_7001() {
  */
 function l10n_update_update_7002() {
   db_drop_field('l10n_update_file', 'last_updated');
+}
+
+/**
+ * Delete 'import_date' field from {l10n_update_file} table.
+ */
+function l10n_update_update_7003() {
+  db_drop_field('l10n_update_file', 'import_date');
+}
+
+/**
+ * Create {cache_l10n_update} table.
+ */
+function l10n_update_update_7004() {
+  if (!db_table_exists('cache_l10n_update')) {
+    $schema = drupal_get_schema_unprocessed('system', 'cache');
+    $schema['description'] = 'Cache table for the Localization Update module to store information about available releases, fetched from central server.';
+    db_create_table('cache_l10n_update', $schema);
+  }
 }

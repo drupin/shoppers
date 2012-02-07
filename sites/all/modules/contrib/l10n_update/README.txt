@@ -138,7 +138,7 @@ API
   Using hook_l10n_update_projects_alter modules can alter or specify the
   translation repositories on a per module basis.
 
-  See l10n_update.api.txt for more information.
+  See l10n_update.api.php for more information.
 
 Maintainers
 -----------

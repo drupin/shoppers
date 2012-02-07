@@ -7,6 +7,14 @@
  * These functions may not be safe for the installer as they use variables and report using watchdog
  */
 
+/**
+ * Threshold for timestamp comparison.
+ *
+ * Eliminates a difference between the download time
+ * (Database: l10n_update_file.timestamp) and the actual .po file timestamp.
+ */
+define('L10N_UPDATE_TIMESTAMP_THRESHOLD', 2);
+
 module_load_include('inc', 'l10n_update');
 
 /**
@@ -21,7 +29,7 @@ module_load_include('inc', 'l10n_update');
  */
 function l10n_update_available_releases($refresh = FALSE) {
   $frequency = variable_get('l10n_update_check_frequency', 0) * 24 * 3600;
-  if (!$refresh && ($cache = cache_get('l10n_update_available_releases')) && (!$frequency || $cache->created > REQUEST_TIME - $frequency)) {
+  if (!$refresh && ($cache = cache_get('l10n_update_available_releases', 'cache_l10n_update')) && (!$frequency || $cache->created > REQUEST_TIME - $frequency)) {
     return $cache->data;
   }
   else {
@@ -30,7 +38,7 @@ function l10n_update_available_releases($refresh = FALSE) {
     $local = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_LOCAL;
     $remote = variable_get('l10n_update_check_mode', L10N_UPDATE_CHECK_ALL) & L10N_UPDATE_CHECK_REMOTE;
     $available = l10n_update_check_projects($projects, array_keys($languages), $local, $remote);
-    cache_set('l10n_update_available_releases', $available, 'cache', $frequency ? REQUEST_TIME + $frequency : CACHE_PERMANENT);
+    cache_set('l10n_update_available_releases', $available, 'cache_l10n_update', $frequency ? REQUEST_TIME + $frequency : CACHE_PERMANENT);
     return $available;
   }
 }
@@ -327,7 +335,16 @@ function l10n_update_source_update($source, $mode) {
 function l10n_update_source_import($source, $mode) {
   if (!empty($source->uri) && $result = l10n_update_import_file($source->uri, $source->language, $mode)) {
     $source->last_checked = REQUEST_TIME;
-    $source->import_date = REQUEST_TIME;
+
+    // We override the file timestamp here. The default file time stamp is the
+    // release date from the l.d.o server. We change the timestamp to the
+    // creation time on the webserver. On multi sites that share a common
+    // sites/all/translations directory, the sharing sites use the local file
+    // creation date as release date. Without this correction the local
+    // file is always newer than the l.d.o. file, which results in unnecessary
+    // translation import.
+    $source->timestamp = time();
+
     return $result;
   }
 }
@@ -390,13 +407,13 @@ function l10n_update_source_history($file) {
  * @param $update
  *   Source object of available update.
  * @return integer
- *   - '-1': $current < $updated OR $current is missing
- *   - '0': $current == $updated OR both $current and $updated are missing
- *   - '1': $current > $updated OR $updated is missing
+ *   - '-1': $current < $update OR $current is missing
+ *   - '0': $current == $update OR both $current and $updated are missing
+ *   - '1': $current > $update OR $update is missing
  */
 function _l10n_update_source_compare($current, $update) {
   if ($current && $update) {
-    if ($current->timestamp == $update->timestamp) {
+    if (abs($current->timestamp - $update->timestamp) < L10N_UPDATE_TIMESTAMP_THRESHOLD) {
       return 0;
     }
     else {

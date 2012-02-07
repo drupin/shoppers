@@ -138,7 +138,7 @@ function _l10n_update_batch_history($id, &$context) {
   // The batch import is performed in a number of steps. History update is
   // always the last step. The details of the downloaded/imported file are
   // stored in $context['results'] array.
-  if (isset($context['results'][$id]['file'])) {
+  if (isset($context['results'][$id]['file']) && !isset($context['results'][$id]['fail'])) {
     $file = $context['results'][$id]['file'];
     l10n_update_source_history($file);
     $context['message'] = $t('Imported: %name.', array('%name' => $file->filename));
@@ -168,7 +168,7 @@ function _l10n_update_batch_import($id, $file, $mode, &$context) {
   // If import is performed after file download the file details of the download
   // are used which are stored in the $context['results'] array.
   // If a locally stored file is imported, the file details are placed in $file.
-  if (empty($file) && isset($context['results'][$id]['file'])) {
+  if (empty($file) && isset($context['results'][$id]['file']) && !isset($context['results'][$id]['fail'])) {
     $file = $context['results'][$id]['file'];
   }
   if ($file) {
@@ -201,51 +201,54 @@ function _l10n_update_batch_finished($success, $results) {
     // Summarize results of added, updated, deleted and skiped translations.
     // Added, updated and deleted are summarized per language to be displayed accordingly.
     foreach ($results as $result) {
-      $language = $result['language'];
-
-      // Initialize variables to prevent PHP Notices.
-      if (!isset($totals[$language])) {
-        $totals[$language] = array();
-        $totals[$language]['add'] = $totals[$language]['update'] = $totals[$language]['delete'] = 0;
-      }
-
-      // Summarize added, updated, deleted and skiped translations.
-      $totals[$language]['add'] += $result['add'];
-      $totals[$language]['update'] += $result['update'];
-      $totals[$language]['delete'] += $result['delete'];
-      $total_skip += $result['skip'];
-
-      // Collect project names of the succesfull and failed imports.
       if (isset($result['fail'])) {
+        // Collect project names of the failed imports.
         $project_fail[$result['file']->name] = $result['file']->name;
       }
       else {
+        $language = $result['language'];
+
+        // Initialize variables to prevent PHP Notices.
+        if (!isset($totals[$language])) {
+          $totals[$language] = array();
+          $totals[$language]['add'] = $totals[$language]['update'] = $totals[$language]['delete'] = 0;
+        }
+
+        // Summarize added, updated, deleted and skiped translations.
+        $totals[$language]['add'] += $result['add'];
+        $totals[$language]['update'] += $result['update'];
+        $totals[$language]['delete'] += $result['delete'];
+        $total_skip += $result['skip'];
+
+        // Collect project names of the succesfull imports.
         $project_success[$result['file']->name] = $result['file']->name;
       }
     }
 
-    // Messages of translation update results.
-    $messages[] = format_plural(count($project_success), 'One project updated: @projects.', '@count projects updated: @projects.', array('@projects' => implode(', ', $project_success)));
-    $languages = language_list();
-    foreach ($totals as $language => $total) {
-      $messages[] = $t('%language translation strings added: !add, updated: !update, deleted: !delete.', array(
-        '%language' => $languages[$language]->name,
-        '!add' => $total['add'],
-        '!update' => $total['update'],
-        '!delete' => $total['delete'],
-      ));
-    }
-    drupal_set_message(implode("<br />\n", $messages));
+    // Messages of succesfull translation update results.
+    if ($project_success) {
+      $messages[] = format_plural(count($project_success), 'One project updated: @projects.', '@count projects updated: @projects.', array('@projects' => implode(', ', $project_success)));
+      $languages = language_list();
+      foreach ($totals as $language => $total) {
+        $messages[] = $t('%language translation strings added: !add, updated: !update, deleted: !delete.', array(
+          '%language' => $languages[$language]->name,
+          '!add' => $total['add'],
+          '!update' => $total['update'],
+          '!delete' => $total['delete'],
+        ));
+      }
+      drupal_set_message(implode("<br />\n", $messages));
 
-    // Warning for disallowed HTML.
-    if ($total_skip) {
-      drupal_set_message(
-        format_plural(
-          $total_skip,
-          'One translation string was skipped because it contains disallowed HTML. See !log_messages for details.',
-          '@count translation strings were skipped because they contain disallowed HTML. See !log_messages for details.',
-          array('!log_messages' => l(t('Recent log messages'), 'admin/reports/dblog'))),
-      'warning');
+      // Warning for disallowed HTML.
+      if ($total_skip) {
+        drupal_set_message(
+          format_plural(
+            $total_skip,
+            'One translation string was skipped because it contains disallowed HTML. See !log_messages for details.',
+            '@count translation strings were skipped because they contain disallowed HTML. See !log_messages for details.',
+            array('!log_messages' => l(t('Recent log messages'), 'admin/reports/dblog'))),
+        'warning');
+      }
     }
 
     // Error for failed imports.
